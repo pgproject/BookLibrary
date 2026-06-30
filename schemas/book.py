@@ -28,3 +28,14 @@ class BookFilter(BaseModel):
     page: int = 1
     page_size: int = 20
     descending: bool = False
+
+
+class BookDetailsResponse(BaseModel):
+    total: int
+    pages: int
+    page: int
+    page_size: int
+
+class BookListResponse(BaseModel):
+    details: BookDetailsResponse
+    items: list[BookResponse]

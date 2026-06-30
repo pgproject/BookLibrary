@@ -5,6 +5,7 @@ from models.book import Book
 from schemas.book import BookCreate
 from schemas.book import BookResponse
 from schemas.book import BookFilter
+from schemas.book import BookListResponse
 
 from services.dependencies import library_service
 
@@ -36,6 +37,6 @@ def remove_book(title: str):
     else:
         return {"message": "Book not found!"}
     
-@router.get("/", response_model=list[BookResponse])
-def get_books(filters: BookFilter = Depends()):
-    return library_service.get_books(filters)
+@router.get("/", response_model=BookListResponse)
+def get_total_books(filters: BookFilter = Depends()):
+    return library_service.get_books_list(filters)
