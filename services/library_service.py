@@ -4,6 +4,8 @@ from sqlalchemy.sql.elements import ColumnElement
 
 from database import SessionLocal
 
+from exceptions.book_exceptions import BookNotFoundException
+from exceptions.genre_exceptions import GenreNotFoundException
 from models.book import Book
 from models.genre import Genre
 
@@ -18,26 +20,27 @@ class LibraryService:
         self.session = SessionLocal()
         self.genre_service = genre_service
 
-    def add_book(self, book) -> bool:
+    def add_book(self, book):
+
         genre = self.session.get(Genre, book.genre_id)
 
-        if genre:
-            self.session.add(book)
-            self.session.commit()
-            return True
-        else:
-            return False
+        if not genre:
+            raise GenreNotFoundException()
+
+        self.session.add(book)
+        self.session.commit()
+       
 
     def remove_book(self, title: str):
         book = self.session.scalar(
             select(Book)
             .where(Book.title == title)
         )
-        if book:
-            self.session.delete(book)
-            self.session.commit()
-            return True
-        return False
+        if not book:
+            raise BookNotFoundException()
+
+        self.session.delete(book)
+        self.session.commit()
 
     def genre_is_used(self, name: str) -> bool:
         book = self.session.scalar(
@@ -46,10 +49,7 @@ class LibraryService:
             .where(Genre.name == name)
         )
 
-        if book:
-            return True
-        
-        return False
+        return book is not None
 
     def get_books_list(self, filters: BookFilter) -> BookListResponse:
         
@@ -59,7 +59,6 @@ class LibraryService:
             details=self._get_books_details(filters, conditions),
             items=self._get_books(filters, conditions)
         )
-        
 
         return book_list
 
