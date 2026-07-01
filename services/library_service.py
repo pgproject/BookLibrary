@@ -59,6 +59,7 @@ class LibraryService:
             details=self._get_books_details(filters, conditions),
             items=self._get_books(filters, conditions)
         )
+        
 
         return book_list
 

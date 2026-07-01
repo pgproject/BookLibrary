@@ -1,4 +1,4 @@
-from fastapi import APIRouter
+from fastapi import APIRouter, HTTPException, status
 
 from models.genre import Genre  
 
@@ -15,7 +15,7 @@ router = APIRouter (
     tags = ["genre"]
 )
 
-@router.post("/")
+@router.post("/", status_code=status.HTTP_201_CREATED)
 def add_genre(genre: GenreCreate):
     new_genre = Genre(name= genre.name)
 
@@ -23,7 +23,10 @@ def add_genre(genre: GenreCreate):
     if added:
         return {"message": "Genre added successfully!"}
 
-    return {"message": "Genre is exists, you can't add it!"}
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Genre already exists!"
+    )
 
 
 @router.delete("/{name}")
@@ -33,9 +36,22 @@ def remove_genre(name: str):
     if remove_result == RemoveGenreResults.SUCCESS:
         return {"message": "Genre removed successfully!"}
     elif remove_result == RemoveGenreResults.NOT_FOUND:
-        return {"message": "Genre not found."}
-    return {"message": "Genre is used."}
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="Genre not found."
+        )
     
+    raise HTTPException(
+        status_code=status.HTTP_400_BAD_REQUEST,
+        detail="Genre is used."
+    )
+
 @router.get("/", response_model=list[GenreResponses])
 def get_genres():
-    return genre_service.get_genres()
+    genres = genre_service.get_genres()
+    if not genres:
+        raise HTTPException(
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="No genres found."
+        )
+    return genres
