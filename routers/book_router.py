@@ -45,12 +45,4 @@ def remove_book(title: str):
 
 @router.get("/", response_model=BookListResponse)
 def get_books(filters: BookFilter = Depends()):
-    books_list = library_service.get_books_list(filters)
-
-    if books_list.details.total == 0:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No books found with the given filters."
-        )
-    
-    return books_list
+    return library_service.get_books_list(filters)

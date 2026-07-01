@@ -46,10 +46,4 @@ def remove_genre(name: str):
 
 @router.get("/", response_model=list[GenreResponses])
 def get_genres():
-    genres = genre_service.get_genres()
-    if not genres:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="No genres found."
-        )
-    return genres
+    return genre_service.get_genres()
