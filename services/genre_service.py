@@ -3,45 +3,35 @@ from sqlalchemy import select
 from database import SessionLocal
 
 from models.genre import Genre
+from exceptions.genre_exceptions import GenreAlreadyExistsException, GenreNotFoundException
 
 class GenreService:
     def __init__(self):
         self.session = SessionLocal()
 
-    def add_genre(self, newGenre) -> bool:
+    def add_genre(self, new_genre):
 
         genre = self.session.scalar(
             select(Genre)
-            .where(Genre.name == newGenre.name)
+            .where(Genre.name == new_genre.name)
         )
 
         if genre:
-            return False
+            raise GenreAlreadyExistsException()
 
-        self.session.add(newGenre)
+        self.session.add(new_genre)
         self.session.commit()
-        return True
 
-    def remove_genre(self, name: str) -> bool:
+    def remove_genre(self, name: str):
         genre = self.session.scalar(
             select(Genre)
             .where(Genre.name == name)
         )
-        if genre:
-            self.session.delete(genre)
-            self.session.commit()
-            return True
-        return False
+        if not genre:
+            raise GenreNotFoundException()
 
-    def genre_exists(self, name: str) -> bool:
-        genre = self.session.scalar(
-            select(Genre)
-            .where(Genre.name == name)
-        )
-
-        if genre:
-            return True
-        return False
+        self.session.delete(genre)
+        self.session.commit()
 
     def get_genres(self):
         return self.session.scalars(
@@ -54,5 +44,8 @@ class GenreService:
             select(Genre)
             .where(Genre.name == name)
         )
+        if not genre:
+            raise GenreNotFoundException()
+
         return genre.id
     

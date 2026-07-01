@@ -1,4 +1,4 @@
-from enums.remove_genre_results import RemoveGenreResults
+from exceptions.genre_exceptions import GenreIsUsedException, GenreNotFoundException
 
 class CatalogService:
 
@@ -10,12 +10,9 @@ class CatalogService:
             self.genre_service = genre_service
             self.library_service = library_service
 
-    def remove_genre(self, name: str) -> RemoveGenreResults:
-            if self.library_service.genre_is_used(name):
-                return RemoveGenreResults.GENRE_IS_USED
+    def remove_genre(self, name: str):
         
-            removed = self.genre_service.remove_genre(name)
-            if removed: 
-                  return RemoveGenreResults.SUCCESS
-            
-            return RemoveGenreResults.NOT_FOUND
+        if self.library_service.genre_is_used(name):
+            raise GenreIsUsedException()
+        
+        self.genre_service.remove_genre(name)
