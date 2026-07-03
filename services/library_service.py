@@ -9,7 +9,11 @@ from exceptions.genre_exceptions import GenreNotFoundException
 from models.book import Book
 from models.genre import Genre
 
-from schemas.book import BookFilter, BookDetailsResponse, BookListResponse
+from schemas.book import (
+    BookFilter, 
+    BookDetailsResponse, 
+    BookListResponse
+)
 
 from enums.book_enums import BookSort 
 
