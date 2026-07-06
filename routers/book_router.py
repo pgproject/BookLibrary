@@ -4,7 +4,7 @@ from models.book import Book
 
 from schemas.book import BookCreate, BookFilter, BookListResponse
 
-from services.dependencies import library_service
+from services.dependencies import get_library_service
 
 router = APIRouter (
     prefix = "/books",
@@ -12,7 +12,7 @@ router = APIRouter (
 )
 
 @router.post("/", status_code=status.HTTP_201_CREATED)
-def add_book(book: BookCreate):
+def add_book(book: BookCreate, library_service = Depends(get_library_service)):
     new_book = Book(
         title = book.title,
         author = book.author,
@@ -24,10 +24,10 @@ def add_book(book: BookCreate):
     return {"message": "Book added successfully!"}
 
 @router.delete("/{title}")
-def remove_book(title: str):
+def remove_book(title: str, library_service = Depends(get_library_service)):
     library_service.remove_book(title)
     return {"message": "Book removed successfully!"}
 
 @router.get("/", response_model=BookListResponse)
-def get_books(filters: BookFilter = Depends()):
+def get_books(filters: BookFilter = Depends(), library_service = Depends(get_library_service)):
     return library_service.get_books_list(filters)

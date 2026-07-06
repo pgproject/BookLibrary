@@ -6,8 +6,8 @@ from models.genre import Genre
 from exceptions.genre_exceptions import GenreAlreadyExistsException, GenreNotFoundException
 
 class GenreService:
-    def __init__(self):
-        self.session = SessionLocal()
+    def __init__(self, session):
+        self.session = session
 
     def add_genre(self, new_genre):
 

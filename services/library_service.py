@@ -20,8 +20,8 @@ from enums.book_enums import BookSort
 import math
 
 class LibraryService:
-    def __init__(self, genre_service):
-        self.session = SessionLocal()
+    def __init__(self, session, genre_service):
+        self.session = session
         self.genre_service = genre_service
 
     def add_book(self, book):
