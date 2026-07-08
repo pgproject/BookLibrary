@@ -1,11 +1,13 @@
 from exceptions.genre_exceptions import GenreIsUsedException, GenreNotFoundException
+from services.genre_service import GenreService
+from services.library_service import LibraryService
 
 class CatalogService:
 
     def __init__(
             self,
-            genre_service,
-            library_service
+            genre_service: GenreService,
+            library_service: LibraryService
         ):
             self.genre_service = genre_service
             self.library_service = library_service

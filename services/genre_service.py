@@ -1,15 +1,15 @@
 from sqlalchemy import select
 
-from database import SessionLocal
+from sqlalchemy.orm import Session
 
 from models.genre import Genre
 from exceptions.genre_exceptions import GenreAlreadyExistsException, GenreNotFoundException
 
 class GenreService:
-    def __init__(self, session):
+    def __init__(self, session: Session):
         self.session = session
 
-    def add_genre(self, new_genre):
+    def add_genre(self, new_genre: Genre):
 
         genre = self.session.scalar(
             select(Genre)
@@ -33,7 +33,7 @@ class GenreService:
         self.session.delete(genre)
         self.session.commit()
 
-    def get_genres(self):
+    def get_genres(self)-> list[Genre]:
         return self.session.scalars(
             select(Genre)
             .order_by(Genre.name)
