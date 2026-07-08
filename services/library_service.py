@@ -2,7 +2,7 @@ from sqlalchemy import select, func
 from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.elements import ColumnElement
 
-from database import SessionLocal
+from sqlalchemy.orm import Session
 
 from exceptions.book_exceptions import BookNotFoundException
 from exceptions.genre_exceptions import GenreNotFoundException
@@ -19,12 +19,14 @@ from enums.book_enums import BookSort
 
 import math
 
+from services.genre_service import GenreService
+
 class LibraryService:
-    def __init__(self, genre_service):
-        self.session = SessionLocal()
+    def __init__(self, session: Session, genre_service: GenreService):
+        self.session = session
         self.genre_service = genre_service
 
-    def add_book(self, book):
+    def add_book(self, book: Book):
 
         genre = self.session.get(Genre, book.genre_id)
 
