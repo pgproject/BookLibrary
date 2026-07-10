@@ -22,6 +22,9 @@ class GenreRepository:
             .where(Genre.name == name)
         )
     
+    def find_genre_by_id(self, genre_id: int)-> Genre | None:
+        return self.session.get(Genre, genre_id)
+    
     def find_all_genres(self) -> list[Genre]:
         return self.session.scalars(
             select(Genre)

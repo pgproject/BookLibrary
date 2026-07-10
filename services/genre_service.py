@@ -26,11 +26,19 @@ class GenreService:
     def get_genres(self)-> list[Genre]:
         return self.genre_repository.find_all_genres()
 
-    def get_genre_id(self, name: str)-> int:
+    def get_genre_id_by_name(self, name: str)-> int:
         genre = self.genre_repository.find_genre_by_name(name)
 
         if not genre:
             raise GenreNotFoundException()
 
         return genre.id
+    
+    def get_genre_by_id(self, genre_id: int)-> Genre:
+        genre = self.genre_repository.find_genre_by_id(genre_id) 
+               
+        if not genre:
+            raise GenreNotFoundException()
+        
+        return genre
     
