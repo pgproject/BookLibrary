@@ -1,51 +1,44 @@
-from sqlalchemy import select
-
-from sqlalchemy.orm import Session
-
 from models.genre import Genre
+from repositories.genre_repositories import GenreRepository
+
 from exceptions.genre_exceptions import GenreAlreadyExistsException, GenreNotFoundException
 
 class GenreService:
-    def __init__(self, session: Session):
-        self.session = session
+    def __init__(self, genre_repository: GenreRepository):
+        self.genre_repository = genre_repository
 
     def add_genre(self, new_genre: Genre):
-
-        genre = self.session.scalar(
-            select(Genre)
-            .where(Genre.name == new_genre.name)
-        )
+        genre = self.genre_repository.find_genre_by_name(new_genre.name)
 
         if genre:
             raise GenreAlreadyExistsException()
 
-        self.session.add(new_genre)
-        self.session.commit()
+        self.genre_repository.add_genre(new_genre)
 
     def remove_genre(self, name: str):
-        genre = self.session.scalar(
-            select(Genre)
-            .where(Genre.name == name)
-        )
+        genre = self.genre_repository.find_genre_by_name(name)
+
         if not genre:
             raise GenreNotFoundException()
 
-        self.session.delete(genre)
-        self.session.commit()
+        self.genre_repository.remove_genre(genre)
 
     def get_genres(self)-> list[Genre]:
-        return self.session.scalars(
-            select(Genre)
-            .order_by(Genre.name)
-        ).all()
-    
-    def get_genre_id(self, name: str):
-        genre = self.session.scalar(
-            select(Genre)
-            .where(Genre.name == name)
-        )
+        return self.genre_repository.find_all_genres()
+
+    def get_genre_id_by_name(self, name: str)-> int:
+        genre = self.genre_repository.find_genre_by_name(name)
+
         if not genre:
             raise GenreNotFoundException()
 
         return genre.id
+    
+    def get_genre_by_id(self, genre_id: int)-> Genre:
+        genre = self.genre_repository.find_genre_by_id(genre_id) 
+               
+        if not genre:
+            raise GenreNotFoundException()
+        
+        return genre
     

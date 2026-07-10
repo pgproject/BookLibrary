@@ -1,139 +1,60 @@
-from sqlalchemy import select, func
-from sqlalchemy.orm import joinedload
 from sqlalchemy.sql.elements import ColumnElement
-
-from sqlalchemy.orm import Session
 
 from exceptions.book_exceptions import BookNotFoundException
 from exceptions.genre_exceptions import GenreNotFoundException
-from models.book import Book
-from models.genre import Genre
 
+from models.book import Book
+
+from repositories.library_repositories import LibraryRepository
 from schemas.book import (
     BookFilter, 
     BookDetailsResponse, 
     BookListResponse
 )
-
-from enums.book_enums import BookSort 
+from services.genre_service import GenreService
 
 import math
 
-from services.genre_service import GenreService
-
 class LibraryService:
-    def __init__(self, session: Session, genre_service: GenreService):
-        self.session = session
+    def __init__(self,
+                genre_service: GenreService,
+                library_repository: LibraryRepository):
         self.genre_service = genre_service
+        self.library_repository = library_repository
+        
 
     def add_book(self, book: Book):
 
-        genre = self.session.get(Genre, book.genre_id)
-
-        if not genre:
-            raise GenreNotFoundException()
-
-        self.session.add(book)
-        self.session.commit()
-       
+        self.genre_service.get_genre_by_id(book.genre_id)
+        self.library_repository.add_book(book)
 
     def remove_book(self, title: str):
-        book = self.session.scalar(
-            select(Book)
-            .where(Book.title == title)
-        )
+        book = self.library_repository.find_book_by_title(title)
         if not book:
             raise BookNotFoundException()
 
-        self.session.delete(book)
-        self.session.commit()
+        self.library_repository.remove_book(book)
 
     def genre_is_used(self, name: str) -> bool:
-        book = self.session.scalar(
-            select(Book)
-            .join(Book.genre)
-            .where(Genre.name == name)
-        )
-
-        return book is not None
-
+        return self.library_repository.exists_book_with_genre_name(name)
+    
     def get_books_list(self, filters: BookFilter) -> BookListResponse:
-        
-        conditions = self._create_conditions(filters)
 
         book_list = BookListResponse(
-            details=self._get_books_details(filters, conditions),
-            items=self._get_books(filters, conditions)
+            details=self._get_books_details(filters),
+            items=self.library_repository.find_books(filters)
         )
 
         return book_list
 
-    def _get_books(self, filters: BookFilter, conditions: list[ColumnElement]):
+    def _get_books_details(self, filters: BookFilter) -> BookDetailsResponse:
         
-        query = (
-            select(Book)
-            .options(joinedload(Book.genre))
-            .where(*conditions)
-        )
-
-        sort_columns = {
-            BookSort.title: Book.title,
-            BookSort.author: Book.author,
-            BookSort.year: Book.year,
-        }
-        
-        column = sort_columns[filters.sort]
-       
-        if filters.descending:
-            query = query.order_by(column.desc())
-        else:                 
-            query = query.order_by(column)
-
-        query = (
-            query
-            .limit(filters.page_size)
-            .offset((filters.page - 1) * filters.page_size)
-        )
-
-        return self.session.scalars(query).all()
-
-    def _get_books_details(self, filters: BookFilter, conditions: list[ColumnElement]) -> BookDetailsResponse:
-        
-        query = (
-            select(func.count())
-            .select_from(Book)
-            .where(*conditions)
-        )
-        
-        count = self.session.scalar(query)
-        amount_of_pages = math.ceil(count / filters.page_size)
+        amount_of_books = self.library_repository.count_books(filters)
+        amount_of_pages = math.ceil(amount_of_books / filters.page_size)
 
         return BookDetailsResponse(
-            total=count, 
+            total=amount_of_books, 
             pages=amount_of_pages,
             page=filters.page,
             page_size=filters.page_size
         )
-
-
-    def _create_conditions(self, filters: BookFilter) -> list[ColumnElement]:
-        conditions = []
-
-        if filters.title:
-            conditions.append(Book.title.ilike(f"%{filters.title}%"))
-        
-        if filters.author:
-            conditions.append(Book.author.ilike(f"%{filters.author}%"))
-
-        if filters.year_from:
-            conditions.append(Book.year >= filters.year_from)
-
-        if filters.year_to:
-            conditions.append(Book.year <= filters.year_to)
-
-        if filters.genre:
-            genre_id = self.genre_service.get_genre_id(filters.genre)
-
-            conditions.append(Book.genre_id == genre_id)
-
-        return conditions
